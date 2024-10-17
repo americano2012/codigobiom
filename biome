@@ -1,0 +1,196 @@
+clear
+close all
+clc
+%[DataM] = csv2strc('Milonga');
+%plotmarkers(DataM,10);
+
+Data = csv2strc('Sofia_002'); % para traer el archivo excel con los datos
+Frames = Data.Frames; % para guardar los frames de la grabacion
+MarkersName = fieldnames(Data.Sets.SofiaB.Raw); % extrae los nombres de marcadores y los guarda
+Ant = fieldnames(Data.Anthropometry.SofiaB); % extrae el nombre de las medidas antropometricas
+% se sacan las filas para cada medida antropometrica
+A1 = Data.Anthropometry.SofiaB.TotalBodyMass.Value ;% masa de la persona
+
+A2 = Data.Anthropometry.SofiaB.ASISBreadth.Value / 1000; % 
+
+A3 = Data.Anthropometry.SofiaB.RightThighLength.Value/ 1000 ; % 
+A4 = Data.Anthropometry.SofiaB.LeftThighLength.Value / 1000; % 
+% A5 Y A6 SON CIRCUNFERENCIAS
+A7 = Data.Anthropometry.SofiaB.RightCalfLength.Value/ 1000 ; % 
+A8 = Data.Anthropometry.SofiaB.LeftCalfLength.Value / 1000; % 
+% A9 Y A10 SON CIRCUNFERENCIAS
+A11 = Data.Anthropometry.SofiaB.RightKneeDiameter.Value/ 1000 ; % 
+A12 = Data.Anthropometry.SofiaB.LeftKneeDiameter.Value/ 1000 ; % 
+
+A13 = Data.Anthropometry.SofiaB.RightFootLength.Value/ 1000 ; % 
+A14 = Data.Anthropometry.SofiaB.LeftFootLength.Value / 1000; % 
+
+A15 = Data.Anthropometry.SofiaB.RightMalleolusHeight.Value/ 1000 ; % 
+A16 = Data.Anthropometry.SofiaB.LeftMalleolusHeight.Value / 1000; % 
+
+A17 = Data.Anthropometry.SofiaB.RightMalleolusWidth.Value / 1000; % 
+A18 = Data.Anthropometry.SofiaB.LeftMalleolusWidth.Value/ 1000 ; % 
+
+A19 = Data.Anthropometry.SofiaB.RightFootBreadth.Value/ 1000 ; % 
+A20 = Data.Anthropometry.SofiaB.LeftFootBreadth.Value / 1000; %
+
+for f = 1 : Frames
+       % lado derecho
+    P1 = Data.Sets.SofiaB.Raw.R_Met(f,:) ;% el parentesis es para ir frame a frame, 
+    P2 = Data.Sets.SofiaB.Raw.R_Heel(f,:);
+    P3 = Data.Sets.SofiaB.Raw.R_Mall(f,:);
+    P4 = Data.Sets.SofiaB.Raw.R_Bar2(f,:);
+    P5 = Data.Sets.SofiaB.Raw.R_Knee1(f,:);
+    P6 = Data.Sets.SofiaB.Raw.R_Bar1(f,:);
+    P7 = Data.Sets.SofiaB.Raw.R_Asis(f,:);
+    
+    % lado izquierdo
+    P8 = Data.Sets.SofiaB.Raw.L_Met(f,:) ;
+    P9 = Data.Sets.SofiaB.Raw.L_Heel(f,:);
+    P10 = Data.Sets.SofiaB.Raw.L_Mall(f,:);
+    P11 = Data.Sets.SofiaB.Raw.L_Bar2(f,:);
+    P12 = Data.Sets.SofiaB.Raw.L_Knee1(f,:);
+    P13 = Data.Sets.SofiaB.Raw.L_Bar1(f,:);
+    P14 = Data.Sets.SofiaB.Raw.L_Asis(f,:);
+
+
+    P15 = Data.Sets.SofiaB.Raw.Sacrum(f,:);
+    
+    % de las diapositivas PELVIS
+    v_pelvis = (P14-P7)/ norm(P14-P7); % norm es para la norma
+    w_pelvis = cross((P7-P15),(P14-P15))/ norm(cross((P7-P15),(P14-P15))); % para producto cruz se usa cross()
+    u_pelvis = cross(v_pelvis,w_pelvis);
+
+    P_Rhip= P15 + 0.598*A2*u_pelvis - 0.344*A2*v_pelvis - 0.29*A2*w_pelvis; %  centro articular cadera derecha izquierda
+    P_Lhip= P15 + 0.598*A2*u_pelvis + 0.344*A2*v_pelvis - 0.29*A2*w_pelvis;
+
+    % de las diapositivas PIERNA DERECHA (  RODILLA )
+    v_Rcalf = (P3-P5)/ norm(P3-P5); 
+    u_Rcalf = cross((P4-P5),(P3-P5))/ norm(cross((P4-P5),(P3-P5))); 
+    w_Rcalf = cross(u_Rcalf,v_Rcalf);
+
+    P_Rknee= P5 + 0.0*A11*u_Rcalf + 0.00*A11*v_Rcalf + 0.5*A11*w_Rcalf; 
+
+    % de las diapositivas PIERNA IZQUIERDA (  RODILLA )
+    v_Lcalf = (P10-P12)/ norm(P10-P12); 
+    u_Lcalf = cross((P10-P12),(P11-P12))/ norm(cross((P10-P12),(P11-P12))); 
+    w_Lcalf = cross(u_Lcalf,v_Lcalf);
+
+    P_Lknee= P12 + 0.0*A12*u_Lcalf + 0.00*A12*v_Lcalf - 0.5*A12*w_Lcalf; 
+
+    % de las diapositivas PIE DERECHO ( tobillo y dedo del pie )
+    u_Rfoot = (P1-P2)/ norm(P1-P2); 
+    w_Rfoot = cross((P1-P3),(P2-P3))/ norm(cross((P1-P3),(P2-P3))); 
+    v_Rfoot = cross(w_Rfoot,u_Rfoot);
+
+    P_Rankle= P3 + 0.016*A13*u_Rfoot + 0.392*A15*v_Rfoot + 0.478*A17*w_Rfoot; 
+    P_Rtoe= P3 + 0.742*A13*u_Rfoot + 1.074*A15*v_Rfoot - 0.187*A19*w_Rfoot;
+
+    % de las diapositivas PIE IZQUIERDO ( tobillo y dedo del pie )
+    u_Lfoot = (P8-P9)/ norm(P8-P9); 
+    w_Lfoot = cross((P8-P10),(P9-P10))/ norm(cross((P8-P10),(P9-P10))); 
+    v_Lfoot = cross(w_Lfoot,u_Lfoot);
+
+    P_Lankle= P10 + 0.016*A14*u_Lfoot + 0.392*A16*v_Lfoot - 0.478*A18*w_Lfoot; 
+    P_Ltoe= P10 + 0.742*A14*u_Lfoot + 1.074*A16*v_Lfoot + 0.187*A20*w_Lfoot;
+
+    % GUARDAMOS TODO
+    % CREAMOS la variable tipo celda (centros ) se hace para guardar lo que calculamos
+    % anteriormente es decir los centros articulares
+
+    Centros.PRhip(f,:)= P_Rhip;
+    Centros.PLhip(f,:)= P_Lhip;
+    
+    Centros.PRknee(f,:)= P_Rknee;
+    Centros.PLknee(f,:)= P_Lknee;
+
+    Centros.PRankle(f,:)= P_Rankle;
+    Centros.PLankle(f,:)= P_Lankle;
+
+    Centros.PRtoe(f,:)= P_Rtoe;
+    Centros.PLtoe(f,:)= P_Ltoe;
+
+    % CENTRO DE MASAS
+    
+
+
+
+   % P_Lthigh = P_Rhip + 0.39* (P_Rknee-P_Rhip);
+   % P_Rthigh = P_Lhip + 0.39* (P_Lknee-P_Lhip);
+  %  P_Rcalf = P_Rknee + 0.42* (P_Rankle-P_Rknee);
+  %  P_Lcalf = P_Lknee + 0.42* (P_Lankle-P_Lknee);
+   % P_Rfoot = P2 + 0.44* (P_Rtoe -P2);
+  %  P_Lfoot = P9 + 0.44* (P_Lankle-P9);
+
+
+   % i_pelvis = w_pelvis ;
+   % j_pelvis = u_pelvis;
+   % k_pelvis = v_pelvis;
+
+
+    % MUSLOS 
+
+   % i1 = (P_Rhip-P_Rknee)/ norm(P_Rhip-P_Rknee);
+  %  j1 = cross((P6-P_Rhip),(P_Rknee-P_Rhip))/ norm(cross((P6-P_Rhip),(P_Rknee-P_Rhip)));
+  %  k1 = cross(i1,j1);
+
+   % i2 = (P_Lhip-P_Lknee)/ norm(P_Lhip-P_Lknee);
+  %  j2 = cross((P_Lknee-P_Lhip),(P13-P_Lhip))/ norm(cross((P_Lknee-P_Lhip),(P13-P_Lhip)));
+   % k2 = cross(i2,j2);
+
+   % i3 = (P_Rknee-P_Rankle)/ norm(P_Rknee-P_Rankle);
+   % j3 = cross((P4-P_Rknee),(P_Rankle-P_Rknee))/ norm(cross((P4-P_Rknee),(P_Rankle-P_Rknee)));
+  %  k3 = cross(i3,j3);
+    
+
+   % i4 = (P_Lknee-P_Lankle)/ norm(P_Lknee-P_Lankle);
+    %j4 = cross((P_Lankle-P_Lknee),(P11-P_Lknee))/ norm(cross((P_Lankle-P_Lknee),(P11-P_Lknee)));
+   % k4 = cross(i4,j4);
+
+   % i5 = (P2-P_Rtoe)/ norm(P2-P_Rtoe);
+   % j5 = cross((P_Rankle-P2),(P_Rtoe-P2))/ norm(cross((P_Rankle-P2),(P_Rtoe-P2)));
+    %k5 = cross(i5,j5);
+
+   % i6 = (P9-P_Ltoe)/ norm(P9-P_Ltoe);
+   % j6 = cross((P_Lankle-P9),(P_Ltoe-P9))/ norm(cross((P_Lankle-P9),(P_Ltoe-P9)));
+   % k6 = cross(i6,j6);
+
+end
+
+% graficamos en 3 dimensiones van a entrar los 3 marcadores
+% para facilitar eso creamos la matriz multicapa
+
+for i=1 : 15
+    % Mxyz(filas,columnas,capas) matriz multicapa
+    %markersname es una variable tipo celda entonces por eso le pone llaves
+    %para que entre a cada marcador
+    % solo accederemos a X (:,1)
+    Mxyz(:,i,1) = Data.Sets.SofiaB.Raw.(sprintf(MarkersName{i}))(:,1); %capa X
+    Mxyz(:,i,2) = Data.Sets.SofiaB.Raw.(sprintf(MarkersName{i}))(:,2); %capa Y
+    Mxyz(:,i,3) = Data.Sets.SofiaB.Raw.(sprintf(MarkersName{i}))(:,3); %capa Z
+end
+% para graficar marcadores centrosa rticular
+centros_Art =  fieldnames(Centros);
+for j =1 : 8
+    Art(:,j,1)= Centros.(sprintf('%s',centros_Art{j}))(:,1);
+    Art(:,j,2)= Centros.(sprintf('%s',centros_Art{j}))(:,2);
+    Art(:,j,3)= Centros.(sprintf('%s',centros_Art{j}))(:,3);
+end
+% simulacion
+% para graficar marcadores
+for g=1:7:Frames
+% iterar frames por frame , mostrar todas las columnas de capa X -> Mxyz(g,:,1)
+    plot3(Mxyz(g,:,1), Mxyz(g,:,2), Mxyz(g,:,3), 'r*') ;
+    hold on
+    plot3(Art(g,:,1),Art(g,:,2),Art(g,:,3), 'b*' )
+    grid on
+    axis equal;
+    axis([-0.25 0.25 -0.3 0.3 0 1]) % limites para los ejes
+    xlabel("X")
+    ylabel("Y")
+    zlabel("Z")
+    grid on
+    hold off
+    drawnow
+    
+end
